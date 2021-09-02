@@ -1,6 +1,7 @@
 from selenium import webdriver
 import csv
-import time
+import requests
+import os
 
 driver = webdriver.Chrome('./driver/chromedriver.exe')
 driver.get('http://books.toscrape.com/')
@@ -8,8 +9,7 @@ driver.get('http://books.toscrape.com/')
 header = ['product_page_url','universal_ product_code (upc)','title','price_including_tax','price_excluding_tax','number_available','product_description','category','review_rating','image_url']
 data = []
 
-def extract_infos_from_one(category,index_of_product_on_page):
-    go_to_category(category)
+def extract_infos_from_one(index_of_product_on_page):
     product = driver.find_elements_by_class_name('image_container')
     product[index_of_product_on_page].click()
     product = driver.find_element_by_class_name('product_page')
@@ -46,7 +46,6 @@ def extract_infos_from_one(category,index_of_product_on_page):
         description = 'Aucune Description'
 
 
-
     heading = driver.find_element_by_class_name('breadcrumb')
     category = heading.find_elements_by_tag_name('li')[2].text
 
@@ -59,28 +58,31 @@ def extract_infos_from_one(category,index_of_product_on_page):
             class_name = number[index]
 
     img = driver.find_element_by_tag_name('img').get_attribute('src')
+
+    response = requests.get(img)
+    try:
+        os.mkdir('./images/')
+    except:
+        pass
+    try:
+        os.mkdir(f'./images/{category}/')
+    except:
+        pass
+
+    file = open(f"./images/{category}/{upc}.png", "wb")
+    file.write(response.content)
+    file.close()
     driver.back()
+
+
     return([url,upc,title,price_in_tax,price_ex_tax,nb_available,description,category,class_name,img])
 
 def exctract_all_page(category):
 
-    go_to_category(category)
-    number_of_book = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/div/form/strong').text
-    number_of_book = int(number_of_book)
-    with open(f'./{category}.csv', 'w', encoding='UTF8',newline='') as f:
-        for i in range(0,number_of_book):
-            if i%20 == 0 and i != 0:
-                driver.find_element_by_link_text('next').click()
-            data.append(extract_infos_from_one(i%20))
-        writer = csv.writer(f)
-        writer.writerow(header)
-        for databook in data:
-            writer.writerow(databook)
-
-def go_to_category(category):
     category = category.lower()
     category = category.title()
-    category = category.replace('And', 'and')
+    category = category.replace('And','and')
+    category = category.replace('A Comment','a comment')
     list_of_li = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/aside/div[2]/ul/li/ul')
     li = list_of_li.find_elements_by_tag_name('li')
 
@@ -90,6 +92,23 @@ def go_to_category(category):
             break
         if l.text == 'Crime':
             raise ValueError("La catégorie demandée ne fait pas partie des catégories disponibles...")
+
+
+    number_of_book = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/div/form/strong').text
+    number_of_book = int(number_of_book)
+    try:
+        os.mkdir('./categories/')
+    except:
+        pass
+    with open(f'./categories/{category}.csv', 'w', encoding='UTF8',newline='') as f:
+        for i in range(0,number_of_book):
+            if i%20 == 0 and i != 0:
+                driver.find_element_by_link_text('next').click()
+            data.append(extract_infos_from_one(i%20))
+        writer = csv.writer(f)
+        writer.writerow(header)
+        for databook in data:
+            writer.writerow(databook)
 
 def all_categories():
     list = []
