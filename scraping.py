@@ -3,7 +3,7 @@ import csv
 import time
 
 driver = webdriver.Chrome('./driver/chromedriver.exe')
-driver.get('http://books.toscrape.com/catalogue/category/books/travel_2/index.html')
+driver.get('http://books.toscrape.com/')
 
 header = ['product_page_url','universal_ product_code (upc)','title','price_including_tax','price_excluding_tax','number_available','product_description','category','review_rating','image_url']
 data = []
@@ -57,24 +57,32 @@ def extract_infos_from_one(index_of_product_on_page):
     driver.back()
     return([url,upc,title,price_in_tax,price_ex_tax,nb_available,description,category,class_name,img])
 
-def exctract_all_page(page_url):
-    driver.get(page_url)
+def exctract_all_page(category):
+
+    category = category.lower()
+    category = category.capitalize()
+    list_of_li = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/aside/div[2]/ul/li/ul')
+    li = list_of_li.find_elements_by_tag_name('li')
+
+    for l in li:
+        if l.text == category:
+            driver.find_element_by_link_text(category).click()
+            break
+        if l.text == 'Crime':
+            raise ValueError("La catégorie demandée ne fait pas partie des catégories disponibles...")
+
+
     number_of_book = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/div/form/strong').text
     number_of_book = int(number_of_book)
     with open('./resume.csv', 'w', encoding='UTF8',newline='') as f:
-        if number_of_book <= 20:
-            for i in range(0,number_of_book):
-                data.append(extract_infos_from_one(i))
-        else:
-            for i in range(0,number_of_book):
-                if i == 20:
-                    driver.find_element_by_link_text('next').click()
-                data.append(extract_infos_from_one(i%20))
-
+        for i in range(0,number_of_book):
+            if i%20 == 0 and i != 0:
+                driver.find_element_by_link_text('next').click()
+            data.append(extract_infos_from_one(i%20))
         writer = csv.writer(f)
         writer.writerow(header)
         for databook in data:
             writer.writerow(databook)
     driver.close()
 
-exctract_all_page('http://books.toscrape.com/catalogue/category/books/mystery_3/index.html')
+exctract_all_page('science')
