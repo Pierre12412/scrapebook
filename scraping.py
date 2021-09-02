@@ -8,7 +8,8 @@ driver.get('http://books.toscrape.com/')
 header = ['product_page_url','universal_ product_code (upc)','title','price_including_tax','price_excluding_tax','number_available','product_description','category','review_rating','image_url']
 data = []
 
-def extract_infos_from_one(index_of_product_on_page):
+def extract_infos_from_one(category,index_of_product_on_page):
+    go_to_category(category)
     product = driver.find_elements_by_class_name('image_container')
     product[index_of_product_on_page].click()
     product = driver.find_element_by_class_name('product_page')
@@ -45,6 +46,7 @@ def extract_infos_from_one(index_of_product_on_page):
         description = 'Aucune Description'
 
 
+
     heading = driver.find_element_by_class_name('breadcrumb')
     category = heading.find_elements_by_tag_name('li')[2].text
 
@@ -62,20 +64,7 @@ def extract_infos_from_one(index_of_product_on_page):
 
 def exctract_all_page(category):
 
-    category = category.lower()
-    category = category.title()
-    category = category.replace('And','and')
-    list_of_li = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/aside/div[2]/ul/li/ul')
-    li = list_of_li.find_elements_by_tag_name('li')
-
-    for l in li:
-        if l.text == category:
-            driver.find_element_by_link_text(category).click()
-            break
-        if l.text == 'Crime':
-            raise ValueError("La catégorie demandée ne fait pas partie des catégories disponibles...")
-
-
+    go_to_category(category)
     number_of_book = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/div/form/strong').text
     number_of_book = int(number_of_book)
     with open(f'./{category}.csv', 'w', encoding='UTF8',newline='') as f:
@@ -87,6 +76,20 @@ def exctract_all_page(category):
         writer.writerow(header)
         for databook in data:
             writer.writerow(databook)
+
+def go_to_category(category):
+    category = category.lower()
+    category = category.title()
+    category = category.replace('And', 'and')
+    list_of_li = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/aside/div[2]/ul/li/ul')
+    li = list_of_li.find_elements_by_tag_name('li')
+
+    for l in li:
+        if l.text == category:
+            driver.find_element_by_link_text(category).click()
+            break
+        if l.text == 'Crime':
+            raise ValueError("La catégorie demandée ne fait pas partie des catégories disponibles...")
 
 def all_categories():
     list = []
