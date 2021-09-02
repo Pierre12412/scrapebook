@@ -33,13 +33,16 @@ def extract_infos_from_one(index_of_product_on_page):
         if i in number:
             nb_available += i
 
-    description = driver.find_element_by_xpath('//*[@id="content_inner"]/article/p').text
-    remove_characters = ['“', '”','"','—','\'']
+    try:
+        description = driver.find_element_by_xpath('//*[@id="content_inner"]/article/p').text
+        remove_characters = ['“', '”','"','—','\'']
 
-    for character in remove_characters:
-        description = description.replace(character, "")
+        for character in remove_characters:
+            description = description.replace(character, "")
 
-    description = description.replace('’',' ')
+        description = description.replace('’',' ')
+    except:
+        description = 'Aucune Description'
 
 
     heading = driver.find_element_by_class_name('breadcrumb')
@@ -60,7 +63,8 @@ def extract_infos_from_one(index_of_product_on_page):
 def exctract_all_page(category):
 
     category = category.lower()
-    category = category.capitalize()
+    category = category.title()
+    category = category.replace('And','and')
     list_of_li = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/aside/div[2]/ul/li/ul')
     li = list_of_li.find_elements_by_tag_name('li')
 
@@ -74,7 +78,7 @@ def exctract_all_page(category):
 
     number_of_book = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/div/form/strong').text
     number_of_book = int(number_of_book)
-    with open('./resume.csv', 'w', encoding='UTF8',newline='') as f:
+    with open(f'./{category}.csv', 'w', encoding='UTF8',newline='') as f:
         for i in range(0,number_of_book):
             if i%20 == 0 and i != 0:
                 driver.find_element_by_link_text('next').click()
@@ -83,6 +87,18 @@ def exctract_all_page(category):
         writer.writerow(header)
         for databook in data:
             writer.writerow(databook)
-    driver.close()
 
-exctract_all_page('science')
+def all_categories():
+    list = []
+    list_of_li = driver.find_element_by_xpath('//*[@id="default"]/div/div/div/aside/div[2]/ul/li/ul')
+    li = list_of_li.find_elements_by_tag_name('li')
+    for l in li:
+        list.append(l.text)
+    return list
+
+def exctract_all_site():
+    list = all_categories()
+    for cat in list:
+        exctract_all_page(cat)
+
+exctract_all_site()
