@@ -9,7 +9,7 @@ driver.get('http://books.toscrape.com/')
 header = ['product_page_url','universal_ product_code (upc)','title','price_including_tax','price_excluding_tax','number_available','product_description','category','review_rating','image_url']
 data = []
 
-def extract_infos_from_one(index_of_product_on_page):
+def extract_infos_from_one(index_of_product_on_page,ask_csv):
     product = driver.find_elements_by_class_name('image_container')
     product[index_of_product_on_page].click()
     product = driver.find_element_by_class_name('product_page')
@@ -74,11 +74,21 @@ def extract_infos_from_one(index_of_product_on_page):
     file.close()
     driver.back()
 
+    if ask_csv:
+        try:
+            os.mkdir('./books/')
+        except:
+            pass
+        with open(f'./books/{upc}.csv', 'w', encoding='UTF8',newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(header)
+            writer.writerow([url,upc,title,price_in_tax,price_ex_tax,nb_available,description,category,class_name,img])
+
 
     return([url,upc,title,price_in_tax,price_ex_tax,nb_available,description,category,class_name,img])
 
-def exctract_all_page(category):
-
+def extract_all_page(category):
+    data = []
     category = category.lower()
     category = category.title()
     category = category.replace('And','and')
@@ -104,7 +114,7 @@ def exctract_all_page(category):
         for i in range(0,number_of_book):
             if i%20 == 0 and i != 0:
                 driver.find_element_by_link_text('next').click()
-            data.append(extract_infos_from_one(i%20))
+            data.append(extract_infos_from_one(i%20,False))
         writer = csv.writer(f)
         writer.writerow(header)
         for databook in data:
@@ -118,9 +128,11 @@ def all_categories():
         list.append(l.text)
     return list
 
-def exctract_all_site():
+def extract_all_site():
     list = all_categories()
     for cat in list:
-        exctract_all_page(cat)
+        extract_all_page(cat)
 
-exctract_all_site()
+extract_infos_from_one(0,True)
+extract_all_page('travel')
+extract_all_site()
