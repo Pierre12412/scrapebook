@@ -10,6 +10,13 @@ header = ['product_page_url','universal_ product_code (upc)','title','price_incl
 data = []
 
 def extract_infos_from_one(index_of_product_on_page,ask_csv):
+    '''
+    paramètres : - index_of_product_on_page --> index du livre sur la page actuelle
+                 - ask_csv --> booléen, True: créer un dossier books et y met les détails du livre
+
+    retourne un tableau de string (infos du livre)
+    '''
+
     product = driver.find_elements_by_class_name('image_container')
     product[index_of_product_on_page].click()
     product = driver.find_element_by_class_name('product_page')
@@ -88,6 +95,11 @@ def extract_infos_from_one(index_of_product_on_page,ask_csv):
     return([url,upc,title,price_in_tax,price_ex_tax,nb_available,description,category,class_name,img])
 
 def extract_all_page(category):
+    '''
+    Extrait toutes les données de la catégorie demandée (dont image)
+    paramètre : - category --> catégorie à extraire
+    Ne retourne rien
+    '''
     data = []
     category = category.lower()
     category = category.title()
@@ -129,6 +141,10 @@ def all_categories():
     return list
 
 def extract_all_site():
+    '''
+    Récupère les données de chaque livre, de chaque catégorie (dont images)
+    Ne retourne rien
+    '''
     list = all_categories()
     for cat in list:
         extract_all_page(cat)
