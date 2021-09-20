@@ -1,3 +1,7 @@
+Ce programme est utilisé pour extraire toutes les informations sur la bibliothèque en ligne : http://books.toscrape.com/
+
+                -------------------------------------------------------------------------------
+
 Assurez vous d'avoir la version 3.9.4 de Python
 
 Pour créer un environnement virtuel, lancez la commande suivante depuis le fichier du projet : python -m venv virtualenv
